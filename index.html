@@ -1,5 +1,4 @@
 <style>
-  /* Style harmonisé avec minorquevacances.fr */
   .event-filters {
     display: flex;
     flex-wrap: wrap;
@@ -27,7 +26,6 @@
     background: #fff;
     font-family: inherit;
   }
-
   .event-card {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -51,7 +49,6 @@
     font-size: 1em;
     color: #333;
   }
-
   .pagination {
     text-align: center;
     margin-top: 2em;
@@ -80,8 +77,12 @@
     <input type="text" id="searchFilter" placeholder="Titre de l’événement..." />
   </label>
   <label>
-    📅 Date :
-    <input type="date" id="dateFilter" />
+    📅 Date début :
+    <input type="date" id="startDateFilter" />
+  </label>
+  <label>
+    📅 Date fin :
+    <input type="date" id="endDateFilter" />
   </label>
   <label>
     📂 Catégorie :
@@ -169,14 +170,16 @@
     const searchValue = document.getElementById('searchFilter').value.toLowerCase();
     const selectedCategory = document.getElementById('categoryFilter').value;
     const selectedPlace = document.getElementById('placeFilter').value;
-    const selectedDate = document.getElementById('dateFilter').value;
+    const startDate = document.getElementById('startDateFilter').value;
+    const endDate = document.getElementById('endDateFilter').value;
 
     filteredEvents = allEvents.filter(e => {
       const matchSearch = !searchValue || e.titre.toLowerCase().includes(searchValue);
       const matchCategory = !selectedCategory || e.categorie === selectedCategory;
       const matchPlace = !selectedPlace || e.lieu === selectedPlace;
-      const matchDate = !selectedDate || e.date === selectedDate;
-      return matchSearch && matchCategory && matchPlace && matchDate;
+      const matchStart = !startDate || e.date >= startDate;
+      const matchEnd = !endDate || e.date <= endDate;
+      return matchSearch && matchCategory && matchPlace && matchStart && matchEnd;
     });
 
     currentPage = 1;
@@ -215,16 +218,16 @@
 
   async function init() {
     const events = await fetchCSV(csvUrl);
-    const today = new Date().toISOString().split('T')[0];
     allEvents = events
-      .filter(e => e.date >= today)
+      .filter(e => e.date)
       .sort((a, b) => a.date.localeCompare(b.date));
     populateFilters(allEvents);
     applyFiltersAndRender();
     document.getElementById('searchFilter').addEventListener('input', applyFiltersAndRender);
     document.getElementById('categoryFilter').addEventListener('change', applyFiltersAndRender);
     document.getElementById('placeFilter').addEventListener('change', applyFiltersAndRender);
-    document.getElementById('dateFilter').addEventListener('change', applyFiltersAndRender);
+    document.getElementById('startDateFilter').addEventListener('change', applyFiltersAndRender);
+    document.getElementById('endDateFilter').addEventListener('change', applyFiltersAndRender);
   }
 
   init();
