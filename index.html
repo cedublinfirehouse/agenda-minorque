@@ -1,210 +1,231 @@
+<style>
+  /* Style harmonisé avec minorquevacances.fr */
+  .event-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5em;
+    margin: 2em 0;
+    background: #f5f5f5;
+    padding: 1em;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+  }
+  .event-filters label {
+    display: flex;
+    flex-direction: column;
+    font-size: 1em;
+    flex: 1 1 200px;
+    color: #333;
+  }
+  .event-filters input,
+  .event-filters select {
+    font-size: 1em;
+    padding: 0.5em;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-top: 0.4em;
+    background: #fff;
+    font-family: inherit;
+  }
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agenda Minorque</title>
-  <style>
-    body {
-      font-family: "Helvetica Neue", sans-serif;
-      margin: 0;
-      padding: 1rem;
-      background: #fff;
-      color: #333;
-      max-width: 960px;
-      margin: auto;
-    }
-    .filters {
-      background: #f7f7f7;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      box-shadow: 0 0 8px rgba(0,0,0,0.05);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .filters label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 0.3rem;
-    }
-    .filters input, .filters select {
-      padding: 0.4rem;
-      width: 100%;
-      max-width: 200px;
-    }
-    .event {
-      background: #fdfdfd;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-left: 4px solid #00b0b9;
-      box-shadow: 0 0 4px rgba(0,0,0,0.03);
-      border-radius: 4px;
-    }
-    .event h3 {
-      margin: 0 0 0.5rem;
-      color: #006e77;
-    }
-    .pagination {
-      display: flex;
-      justify-content: center;
-      margin-top: 2rem;
-      gap: 0.5rem;
-    }
-    .pagination button {
-      background: #00b0b9;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .pagination button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    @media (max-width: 600px) {
-      .filters {
-        flex-direction: column;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="filters">
-    <div>
-      <label>🔍 Recherche :</label>
-      <input type="text" id="searchInput" placeholder="Titre de l’événement..." />
-    </div>
-    <div>
-      <label>📅 Date début :</label>
-      <input type="date" id="startDate" />
-    </div>
-    <div>
-      <label>📅 Date fin :</label>
-      <input type="date" id="endDate" />
-    </div>
-    <div>
-      <label>📂 Catégorie :</label>
-      <select id="categoryFilter"><option value="">Toutes</option></select>
-    </div>
-    <div>
-      <label>📍 Lieu :</label>
-      <select id="locationFilter"><option value="">Tous</option></select>
-    </div>
-  </div>
+  .event-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5em;
+    margin: 1.5em 0;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .event-title {
+    font-weight: 700;
+    font-size: 1.3em;
+    color: #004d80;
+    margin-bottom: 0.5em;
+  }
+  .event-meta {
+    font-size: 0.95em;
+    color: #666;
+    margin-bottom: 0.6em;
+  }
+  .event-description {
+    font-size: 1em;
+    color: #333;
+  }
 
-  <div id="eventsContainer"></div>
-  <div class="pagination" id="pagination"></div>
+  .pagination {
+    text-align: center;
+    margin-top: 2em;
+  }
+  .pagination button {
+    margin: 0 5px;
+    padding: 0.4em 0.8em;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+  .pagination button.active {
+    font-weight: bold;
+    background-color: #d0e8f5;
+    border-color: #0073aa;
+    color: #0073aa;
+  }
+</style>
 
-  <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3so-53W_KiW_zyoaNS2f3ijIDrWbuBZ7-XfZqr1jb8z6sL_UMZW6cLeIVkzXne34Bv96z7TAE2QPI/pub?output=csv&gid=0";
+<div class="event-filters">
+  <label>
+    🔍 Recherche :
+    <input type="text" id="searchFilter" placeholder="Titre de l’événement..." />
+  </label>
+  <label>
+    📅 Date :
+    <input type="date" id="dateFilter" />
+  </label>
+  <label>
+    📂 Catégorie :
+    <select id="categoryFilter">
+      <option value="">Toutes</option>
+    </select>
+  </label>
+  <label>
+    📍 Lieu :
+    <select id="placeFilter">
+      <option value="">Tous</option>
+    </select>
+  </label>
+</div>
 
-    let allEvents = [];
-    let filteredEvents = [];
-    let currentPage = 1;
-    const perPage = 5;
+<div id="eventList">Chargement des événements…</div>
+<div class="pagination" id="pagination"></div>
 
-    const container = document.getElementById("eventsContainer");
-    const pagination = document.getElementById("pagination");
+<script>
+  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3so-53W_KiW_zyoaNS2f3ijIDrWbuBZ7-XfZqr1jb8z6sL_UMZW6cLeIVkzXne34Bv96z7TAE2QPI/pub?output=csv&gid=0';
+  const eventsPerPage = 20;
+  let allEvents = [];
+  let filteredEvents = [];
+  let currentPage = 1;
 
-    const searchInput = document.getElementById("searchInput");
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
-    const categoryFilter = document.getElementById("categoryFilter");
-    const locationFilter = document.getElementById("locationFilter");
+  async function fetchCSV(url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    return parseCSV(text);
+  }
 
-    function parseCSV(data) {
-      const lines = data.split("\n").filter(l => l.trim() !== "");
-      const headers = lines[0].split(",");
-      return lines.slice(1).map(line => {
-        const values = line.split(",");
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = values[i]?.trim());
-        return obj;
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines.shift().split(',').map(h => h.trim().toLowerCase());
+    return lines.map(line => {
+      const values = line.split(',').map(v => v.trim());
+      const obj = {};
+      headers.forEach((h, i) => {
+        obj[h] = values[i] || '';
       });
-    }
+      return obj;
+    });
+  }
 
-    function renderEvents(events) {
-      container.innerHTML = "";
-      const start = (currentPage - 1) * perPage;
-      const paginated = events.slice(start, start + perPage);
-      paginated.forEach(e => {
-        const div = document.createElement("div");
-        div.className = "event";
-        div.innerHTML = \`<h3>\${e.titre}</h3><p>\${e.date} à \${e.lieu}</p><p>\${e.description}</p>\`;
-        container.appendChild(div);
-      });
-      renderPagination(events.length);
-      window.parent.postMessage({ agendaHeight: document.body.scrollHeight }, "*");
-    }
+  function createEventCard(event) {
+    return `
+      <div class="event-card"
+           data-category="${event.categorie}"
+           data-place="${event.lieu}"
+           data-date="${event.date}"
+           data-title="${event.titre.toLowerCase()}">
+        <div class="event-title">${event.titre}</div>
+        <div class="event-meta">${event.date} à ${event.heure} – ${event.lieu} (${event.categorie})</div>
+        <div class="event-description">${event.description}</div>
+        ${event["infos compl."] ? `<div class="event-description"><em>${event["infos compl."]}</em></div>` : ''}
+      </div>
+    `;
+  }
 
-    function renderPagination(total) {
-      pagination.innerHTML = "";
-      const totalPages = Math.ceil(total / perPage);
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        btn.disabled = i === currentPage;
-        btn.onclick = () => {
-          currentPage = i;
-          renderEvents(filteredEvents);
-        };
-        pagination.appendChild(btn);
-      }
-    }
+  function populateFilters(events) {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const placeFilter = document.getElementById('placeFilter');
+    categoryFilter.innerHTML = '<option value="">Toutes</option>';
+    placeFilter.innerHTML = '<option value="">Tous</option>';
 
-    function applyFilters() {
-      const q = searchInput.value.toLowerCase();
-      const cat = categoryFilter.value;
-      const loc = locationFilter.value;
-      const d1 = startDateInput.value;
-      const d2 = endDateInput.value;
-      filteredEvents = allEvents.filter(e => {
-        const matchesText = e.titre.toLowerCase().includes(q);
-        const matchesCat = !cat || e.categorie === cat;
-        const matchesLoc = !loc || e.lieu === loc;
-        const matchesDate = (!d1 || e.date >= d1) && (!d2 || e.date <= d2);
-        return matchesText && matchesCat && matchesLoc && matchesDate;
-      });
-      currentPage = 1;
-      renderEvents(filteredEvents);
-    }
+    const categories = [...new Set(events.map(e => e.categorie).filter(Boolean))].sort();
+    const places = [...new Set(events.map(e => e.lieu).filter(Boolean))].sort();
 
-    function populateFilters() {
-      const cats = [...new Set(allEvents.map(e => e.categorie))];
-      cats.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        categoryFilter.appendChild(opt);
-      });
-      const locs = [...new Set(allEvents.map(e => e.lieu))];
-      locs.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        locationFilter.appendChild(opt);
-      });
-    }
-
-    fetch(csvUrl)
-      .then(res => res.text())
-      .then(text => {
-        allEvents = parseCSV(text);
-        populateFilters();
-        applyFilters();
-      });
-
-    [searchInput, categoryFilter, locationFilter, startDateInput, endDateInput].forEach(input => {
-      input.addEventListener("input", applyFilters);
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      categoryFilter.appendChild(option);
     });
 
-    window.addEventListener("load", () => {
-      window.parent.postMessage({ agendaHeight: document.body.scrollHeight }, "*");
+    places.forEach(place => {
+      const option = document.createElement('option');
+      option.value = place;
+      option.textContent = place;
+      placeFilter.appendChild(option);
     });
-  </script>
-</body>
-</html>
+  }
+
+  function applyFiltersAndRender() {
+    const searchValue = document.getElementById('searchFilter').value.toLowerCase();
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    const selectedPlace = document.getElementById('placeFilter').value;
+    const selectedDate = document.getElementById('dateFilter').value;
+
+    filteredEvents = allEvents.filter(e => {
+      const matchSearch = !searchValue || e.titre.toLowerCase().includes(searchValue);
+      const matchCategory = !selectedCategory || e.categorie === selectedCategory;
+      const matchPlace = !selectedPlace || e.lieu === selectedPlace;
+      const matchDate = !selectedDate || e.date === selectedDate;
+      return matchSearch && matchCategory && matchPlace && matchDate;
+    });
+
+    currentPage = 1;
+    renderCurrentPage();
+  }
+
+  function renderCurrentPage() {
+    const eventList = document.getElementById('eventList');
+    const start = (currentPage - 1) * eventsPerPage;
+    const end = start + eventsPerPage;
+    const pageEvents = filteredEvents.slice(start, end);
+    eventList.innerHTML = pageEvents.length > 0
+      ? pageEvents.map(createEventCard).join('')
+      : '<p>Aucun événement trouvé.</p>';
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+    const pagination = document.getElementById('pagination');
+    if (totalPages <= 1) {
+      pagination.innerHTML = '';
+      return;
+    }
+    let buttons = '';
+    for (let i = 1; i <= totalPages; i++) {
+      buttons += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    pagination.innerHTML = buttons;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    renderCurrentPage();
+  }
+
+  async function init() {
+    const events = await fetchCSV(csvUrl);
+    const today = new Date().toISOString().split('T')[0];
+    allEvents = events
+      .filter(e => e.date >= today)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    populateFilters(allEvents);
+    applyFiltersAndRender();
+    document.getElementById('searchFilter').addEventListener('input', applyFiltersAndRender);
+    document.getElementById('categoryFilter').addEventListener('change', applyFiltersAndRender);
+    document.getElementById('placeFilter').addEventListener('change', applyFiltersAndRender);
+    document.getElementById('dateFilter').addEventListener('change', applyFiltersAndRender);
+  }
+
+  init();
+</script>
